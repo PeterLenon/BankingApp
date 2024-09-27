@@ -16,42 +16,41 @@ public class AccountServiceRestController {
 
     @PostMapping(value = "/create", produces = "application/json")
     public String createAccount(@RequestBody AccountDTO accountDTO) throws JsonProcessingException {
-        return handleAccountOperation(() -> accountsManager.create(accountDTO.getName(), accountDTO.getEmailAddress(), accountDTO.getPassword()),
-            "Account created successfully",
-            "Email address already taken");
+        boolean success = false;
+        Map<String, Object> response = new HashMap<>();
+
+        try{
+            success = accountsManager.create(accountDTO.getName(), accountDTO.getEmailAddress(), accountDTO.getPassword());
+        } catch (Exception e) {
+            response.put("message", e.getMessage());
+        }
+        response.put("success", success);
+        return mapper.writeValueAsString(response);
     }
 
     @PatchMapping(value = "/update", produces = "application/json")
     public String updateAccount(@RequestBody AccountDTO accountDTO) throws JsonProcessingException {
-        return handleAccountOperation(() -> accountsManager.update(accountDTO.getName(), accountDTO.getEmailAddress(), accountDTO.getPassword()),
-            "Account updated successfully",
-            "Error updating account");
+        boolean success = false;
+        Map<String, Object> response = new HashMap<>();
+
+        try{
+            success = accountsManager.update(accountDTO.getName(), accountDTO.getEmailAddress(), accountDTO.getPassword());
+        }catch (Exception e) {
+            response.put("message", e.getMessage());
+        }
+        response.put("success", success);
+        return mapper.writeValueAsString(response);
     }
 
     @GetMapping(value = "/get", produces = "application/json")
     public String getAccount(@RequestParam String emailAddress, @RequestParam String password) throws JsonProcessingException {
-        return handleAccountOperation(() -> accountsManager.fetch(emailAddress, password),
-            "Account retrieved successfully",
-            "User not found");
-    }
+        String response;
+        try{
+             response = accountsManager.fetch(emailAddress, password);
+        }catch (Exception e){
 
-    private String handleAccountOperation(AccountOperation operation, String successMessage, String errorMessage) throws JsonProcessingException {
-        Map<String, Object> responseJson = new HashMap<>();
-        boolean success;
-        try {
-            success = operation.execute();
-        } catch (Exception ex) {
-            success = false;
-            errorMessage = ex.getMessage() != null ? ex.getMessage() : errorMessage;
+            response = String.format("{ error %s , errorCode %d }", e.getMessage(), 500);
         }
-        responseJson.put("success", success);
-        responseJson.put("message", success ? successMessage : errorMessage);
-        responseJson.put("code", success ? 200 : 400);
-        return mapper.writeValueAsString(responseJson);
-    }
-
-    @FunctionalInterface
-    private interface AccountOperation {
-        boolean execute() throws Exception;
+        return response;
     }
 }
