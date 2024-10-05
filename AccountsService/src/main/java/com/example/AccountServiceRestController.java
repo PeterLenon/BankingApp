@@ -48,7 +48,6 @@ public class AccountServiceRestController {
         try{
              response = accountsManager.fetch(emailAddress, password);
         }catch (Exception e){
-
             response = String.format("{ error %s , errorCode %d }", e.getMessage(), 500);
         }
         return response;
